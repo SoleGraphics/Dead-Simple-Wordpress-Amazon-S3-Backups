@@ -1,4 +1,4 @@
-===== Sole AWS Site Backup =====
+===== Dead Simple Wordpress Amazon S3 Backups =====
 
 ===== Plugin Info =====
 
@@ -20,7 +20,6 @@ AWS Credentials
 
 Backup Destination
 	- Bucket Name
-	- Subfolder in bucket (optional)
 
 AWS Settings
 	- Region
@@ -33,6 +32,10 @@ Backup Schedule
 
 You can also manually backup the database and uploads by clicking the "Backup" button on the settings page.
 
-===== Contribute =====
+===== How To Contribute =====
 
-TODO: write section
+There are a couple ways you can contribute:
+
+First, you can report any issues you come across. Issues can be reported at https://github.com/SoleGraphics/Dead-Simple-Wordpress-Amazon-S3-Backups/issues
+
+Second (for developers) feel free to fork the repo, make whatever changes you think are beneficial/appropriate, and then make a PR. If you choose this option, PLEASE add a description of your change AND WHY you added it.

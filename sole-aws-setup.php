@@ -55,6 +55,9 @@ class Sole_AWS_Backup {
 
 		// Register submenu for plugin settings - default page for the plugin
 		add_submenu_page( self::SETTINGS_PAGE_SLUG, 'Dead Simple Backup Settings', 'Settings', 'administrator', self::SETTINGS_PAGE_SLUG, array( $this, 'display_settings_page' ) );
+
+		// Register submenu for log page
+		add_submenu_page( self::SETTINGS_PAGE_SLUG, 'Dead Simple Backup Logs', 'Logs', 'administrator', self::SETTINGS_PAGE_SLUG . '-logs', array( $this, 'display_logs' ) );
 	}
 
 	// Need to register all the settings
@@ -68,6 +71,10 @@ class Sole_AWS_Backup {
 	// Callback function added in `add_admin_menu()`
 	public function display_settings_page() {
 		include 'templates/settings-form.php';
+	}
+
+	public function display_logs() {
+		include 'templates/log-file.php';
 	}
 }
 

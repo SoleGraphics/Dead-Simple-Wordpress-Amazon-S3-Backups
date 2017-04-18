@@ -62,6 +62,10 @@ class Sole_AWS_Backup {
 		add_action( 'admin_menu', array( $this, 'add_admin_menu') );
 		add_action( 'admin_init', array( $this, 'register_plugin_settings') );
 
+		// Need to check that the timestamps are valid times
+		add_filter( 'pre_update_option_sole_aws_db_backup_timestamp', array( $this,'check_if_is_valid_timestamp' ), 10, 2 );
+		add_filter( 'pre_update_option_sole_aws_uploads_backup_timestamp', array( $this,'check_if_is_valid_timestamp' ), 10, 2 );
+
 		// TODO: add the cron jobs
 
 		// Check if user wants to manually backup the DB & uploads
@@ -96,6 +100,15 @@ class Sole_AWS_Backup {
 
 	public function display_logs() {
 		include 'templates/log-file.php';
+	}
+
+	// Check if a given value is a timestamp or not.
+	// If not, return the old value.
+	public function check_if_is_valid_timestamp( $new, $old ) {
+		if( preg_match("/^(2[0-3]|[01][0-9]):([0-5][0-9])$/", $new ) ) {
+			return $new;
+		}
+		return $old;
 	}
 }
 

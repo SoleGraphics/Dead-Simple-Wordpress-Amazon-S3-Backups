@@ -1,7 +1,7 @@
 <div class="wrap">
 	<h1>Dead Simple Wordpress Amazon S3 Backups</h1>
 	<form method="POST" action="options.php">
-		<?php settings_fields( 'sole_aws_simple_backup_fields' ); ?>
+		<?php settings_fields( self::SETTINGS_GROUP ); ?>
 		<?php do_settings_sections( 'sole-settings-page' ); ?>
 		<h2>Settings</h2>
 		<table>
@@ -9,15 +9,19 @@
 				<tr>
 					<td><?php echo $name; ?></td>
 					<td>
-						<?php if( 'array' == gettype( $option ) ): ?>
-							<select>
-								<option name="<?php echo $option['slug']; ?>" value="">Select</option>
+						<?php if( isset( $option['options'] ) ):
+							$current_val = get_option( $option['slug'] ); ?>
+							<select name="<?php echo $option['slug']; ?>">
+								<option value="">Select</option>
 								<?php foreach( $option['options'] as $dd_option ): ?>
-									<option name="<?php echo $option['slug']; ?>" value="<?php echo $dd_option; ?>"><?php echo ucwords( $dd_option ); ?></option>
+									<option value="<?php echo $dd_option; ?>" <?php if($dd_option == $current_val ): ?> selected="selected" <?php endif; ?>><?php echo ucwords( $dd_option ); ?></option>
 								<?php endforeach; ?>
 							</select>
 						<?php else: ?>
-							<input type="text" name="<?php echo $option; ?>" value="<?php echo get_option( $option ); ?>" />
+							<input type="text" name="<?php echo $option['slug']; ?>" value="<?php echo get_option( $option['slug'] ); ?>" />
+						<?php endif; ?>
+						<?php if( isset( $option['instruction'] ) ): ?>
+							</td><td><?php echo $option['instruction']; ?>
 						<?php endif; ?>
 					</td>
 				</tr>

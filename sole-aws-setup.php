@@ -20,25 +20,41 @@ class Sole_AWS_Backup {
 
 	const SETTINGS_PAGE_SLUG = 'sole-settings-page';
 	const SETTINGS_GROUP     = 'sole-settings-group';
+	// Plugin Options to register & display
 	private $plugin_settings = array(
-		'Access Key'    => 'sole_aws_access_key',
-		'Access Secret' => 'sole_aws_access_secret',
-		'Bucket'        => 'sole_aws_bucket',
-		'Region'        => 'sole_aws_region',
+		'Access Key'    => array(
+			'slug' => 'sole_aws_access_key',
+		),
+		'Access Secret' => array(
+			'slug' =>'sole_aws_access_secret',
+		),
+		'Bucket'        => array(
+			'slug' => 'sole_aws_bucket',
+		),
+		'Region'        => array(
+			'slug'        => 'sole_aws_region',
+			'instruction' => 'To find your region check <a href="http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region" target="__blank">Amazon\'s documentation',
+		),
 		'Database Backup Frequency' => array(
 			'slug'    => 'sole_aws_db_backup_frequency',
 			'options' => array(
 				'daily', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
 			)
 		),
-		'Database Backup Time' => 'sole_aws_db_backup_timestamp',
+		'Database Backup Time' => array(
+			'slug' => 'sole_aws_db_backup_timestamp',
+			'instruction' => 'Enter time in a 24 hour "HH:MM" format',
+		),
 		'Uploads Backup Frequency' => array(
 			'slug'    => 'sole_aws_db_uploads_frequency',
 			'options' => array(
 				'daily', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
 			)
 		),
-		'Uploads Backup Time' => 'sole_aws_uploads_backup_timestamp',
+		'Uploads Backup Time' => array(
+			'slug' => 'sole_aws_uploads_backup_timestamp',
+			'instruction' => 'Enter time in a 24 hour "HH:MM" format',
+		)
 	);
 
 	function __construct() {
@@ -47,6 +63,11 @@ class Sole_AWS_Backup {
 		add_action( 'admin_init', array( $this, 'register_plugin_settings') );
 
 		// TODO: add the cron jobs
+
+		// Check if user wants to manually backup the DB & uploads
+		if( isset( $_POST['manual-sole-backup-trigger'] ) ) {
+
+		}
 	}
 
 	// Setup the menu in the admin panel
@@ -64,7 +85,7 @@ class Sole_AWS_Backup {
 	public function register_plugin_settings() {
 		// Settings defined at top of class
 		foreach ( $this->plugin_settings as $setting ) {
-			register_setting( self::SETTINGS_GROUP, $setting );
+			register_setting( self::SETTINGS_GROUP, $setting['slug'] );
 		}
 	}
 

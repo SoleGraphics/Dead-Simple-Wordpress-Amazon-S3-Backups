@@ -31,10 +31,26 @@ class Sole_AWS_Controller {
 
 	public function upload_dir( $dir_path ) {
 		$s3_client = $this->get_s3_client();
+		try {
+			$s3_client->uploadDirectory( $dir_path, $this->bucket, 'uploads' );
+		}
+		catch( S3Exception $e ) {
+
+		}
 	}
 
 	public function upload_file( $file_path, $file_name ) {
 		$s3_client = $this->get_s3_client();
+		try {
+			$result = $s3_client->putObject([
+			    'Bucket'     => $this->bucket,
+			    'Key'        => $file_name,
+			    'SourceFile' => $file_path . $file_name,
+			]);
+		}
+		catch( S3Exception $e ) {
+
+		}
 	}
 
 	// Common setup for both upload procedures

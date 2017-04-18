@@ -30,7 +30,7 @@
 		<?php submit_button(); ?>
 	</form>
 	<h2>Extras</h2>
-	<form method="POST" action="options.php">
+	<form method="POST" action="">
 		<input type="hidden" name="manual-sole-backup-trigger" value="true" />
 		<?php submit_button( 'Backup Files & Database' ); ?>
 	</form>

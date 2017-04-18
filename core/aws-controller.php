@@ -35,7 +35,7 @@ class Sole_AWS_Controller {
 			$s3_client->uploadDirectory( $dir_path, $this->bucket, 'uploads' );
 		}
 		catch( S3Exception $e ) {
-
+			$this->log_results( $e->getMessage() . "\n" );
 		}
 	}
 
@@ -49,7 +49,7 @@ class Sole_AWS_Controller {
 			]);
 		}
 		catch( S3Exception $e ) {
-
+			$this->log_results( $e->getMessage() . "\n" );
 		}
 	}
 
@@ -73,7 +73,7 @@ class Sole_AWS_Controller {
 			fclose( $handle );
 		}
 		catch( Exception $e ) {
-			// error writing file.
+			error_log( $e->getMessage() );
 		}
 	}
 }

@@ -21,19 +21,19 @@ class Sole_AWS_Backup_Controller {
 		$file_name = 'db-backup-' . date('Y-m-d') . '.sql';
 
 		// Build the command
-		$cmd = $mysql_path . $mysql_cmd . ' -h ' . DB_HOST . ' -u ' . DB_USER . ' -p' . DB_PASSWORD . ' ' . DB_NAME . ' > ' . $path . $file_name . ' 2>> ' . $path . 'error-log';
+		$cmd = $mysql_path . $mysql_cmd . ' -h ' . escapeshellarg( DB_HOST ) . ' -u ' . escapeshellarg( DB_USER ) . ' -p' . escapeshellarg( DB_PASSWORD ) . ' ' . escapeshellarg( DB_NAME ) . ' > ' . $path . $file_name . ' 2>> ' . $path . 'error-log';
 
 		// Finally can run the command.
 		exec( $cmd, $output, $results );
 
 		// Check if there was an error
 		if( ! file_exists( $path . $file_name ) ) {
-			// log error
 			return;
 		}
 
 		$this->aws_controller->upload_file( $path, $file_name );
 
+		// Delete file now that it's either on amazon OR things went VERY wrong.
 		unlink( $path . $file_name );
 	}
 

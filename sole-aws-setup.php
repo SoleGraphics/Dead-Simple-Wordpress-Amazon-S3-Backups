@@ -14,7 +14,7 @@ require_once( 'vendor/autoload.php' );
 
 // Custom controllers for the backup process
 require_once( 'core/aws-controller.php' );
-require_once( 'core/db-controller.php' );
+require_once( 'core/backup-controller.php' );
 
 class Sole_AWS_Backup {
 
@@ -70,7 +70,9 @@ class Sole_AWS_Backup {
 
 		// Check if user wants to manually backup the DB & uploads
 		if( isset( $_POST['manual-sole-backup-trigger'] ) ) {
-
+			$backup_controller = new Sole_AWS_Backup_Controller();
+			$backup_controller->backup_database();
+			$backup_controller->backup_uploads_dir();
 		}
 	}
 

@@ -28,13 +28,13 @@ class Sole_AWS_Backup_Controller {
 
 		// Check if there was an error
 		if( ! file_exists( $path . $file_name ) ) {
-			return false;
+			// log error
+			return;
 		}
 
 		$this->aws_controller->upload_file( $path, $file_name );
 
-		// Delete file now that it's backed up (or everything died)
-
+		unlink( $path . $file_name );
 	}
 
 	// NEED TO GET CORRECT PATH TO THE mysqldump COMMAND!!!!

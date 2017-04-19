@@ -97,9 +97,10 @@ class Sole_AWS_Backup {
 			$this->backup_controller->backup_uploads_dir();
 		}
 
+		// Need to remove CRON jobs on deactivation
 		register_deactivation_hook( __FILE__, array( $this, 'clear_plugin_info' ) );
-
-		// TODO: add uninstall hook
+		// Need to remove our custom table from the DB
+		register_uninstall_hook( __FILE__, array( $this->logger, 'destroy_table' ) );
 	}
 
 	// Setup the menu in the admin panel

@@ -21,7 +21,7 @@ class Sole_AWS_Backup_Controller {
 		$file_name = 'db-backup-' . date('Y-m-d') . '.sql';
 
 		// Build the command
-		$cmd = $mysql_path . $mysql_cmd . ' -h ' . escapeshellarg( DB_HOST ) . ' -u ' . escapeshellarg( DB_USER ) . ' -p' . escapeshellarg( DB_PASSWORD ) . ' ' . escapeshellarg( DB_NAME ) . ' > ' . $path . $file_name . ' 2>> ' . $path . 'error-log';
+		$cmd = $mysql_path . $mysql_cmd . ' -h ' . escapeshellarg( DB_HOST ) . ' -u ' . escapeshellarg( DB_USER ) . ' -p' . escapeshellarg( DB_PASSWORD ) . ' ' . escapeshellarg( DB_NAME ) . ' > ' . $path . $file_name . ' 2>> ' . $path . 'error.log';
 
 		// Finally can run the command.
 		exec( $cmd, $output, $results );

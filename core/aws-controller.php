@@ -26,7 +26,7 @@ class Sole_AWS_Controller {
 		$this->access_secret = get_option( 'sole_aws_access_secret' );
 		$this->bucket        = get_option( 'sole_aws_bucket' );
 		$this->region        = get_option( 'sole_aws_region' );
-		$this->log_file      = plugin_dir_path( __DIR__ ) . 'error-log';
+		$this->log_file      = plugin_dir_path( __DIR__ ) . 'error.log';
 	}
 
 	public function upload_dir( $dir_path ) {

@@ -37,6 +37,7 @@ class Sole_AWS_Logger {
 			ID mediumint NOT NULL AUTO_INCREMENT,
 			log_time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
 			log_message text DEFAULT '' NOT NULL,
+			log_type text DEFAULT '' NOT NULL,
 			PRIMARY KEY (ID)
 		) $charset;";
 		dbDelta( $sql );
@@ -49,8 +50,14 @@ class Sole_AWS_Logger {
 		$wpdb->query( $sql );
 	}
 
-	public function add_log_event( $msg, $type ) {
-		// TODO: log event
+	public function add_log_event( $msg, $type='event' ) {
+		global $wpdb;
+		$time_added = date('Y-m-d H:i:s');
+		$wpdb->insert( $wpdb->prefix . self::DB_TABLE_EXTENSION, array(
+			'log_time'    => $time_added,
+			'log_message' => $msg,
+			'log_type'    => $type,
+		) );
 	}
 
 	public function get_log_events() {

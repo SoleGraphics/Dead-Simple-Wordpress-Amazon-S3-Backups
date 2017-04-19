@@ -44,7 +44,7 @@ class Sole_AWS_Logger {
 	}
 
 	// Should only be run on plugin uninstall.
-	public function destroy_table() {
+	public static function destroy_table() {
 		global $wpdb;
 		$sql = "DROP TABLE IF EXISTS " . $wpdb->prefix . self::DB_TABLE_EXTENSION;
 		$wpdb->query( $sql );

@@ -203,6 +203,7 @@ class Sole_AWS_Backup {
 			$start_time = $this->get_start_time( $backup_frequency, $backup_time );
 			$cron_frequency = ( 'daily' == $backup_frequency ) ? 'daily' : 'weekly';
 			wp_schedule_event( $start_time, $cron_frequency, $event );
+			$this->logger->add_log_event( 'Set scheduled event for ' . $event . ': ' . $backup_frequency . ' at ' . $backup_time, 'schedule change' );
 		}
 	}
 

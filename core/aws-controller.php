@@ -26,30 +26,32 @@ class Sole_AWS_Controller {
 		$this->access_secret = get_option( 'sole_aws_access_secret' );
 		$this->bucket        = get_option( 'sole_aws_bucket' );
 		$this->region        = get_option( 'sole_aws_region' );
-		$this->log_file      = plugin_dir_path( __DIR__ ) . 'error.log';
+		$this->logger        = Sole_AWS_Logger::get_instance();
 	}
 
 	public function upload_dir( $dir_path ) {
 		$s3_client = $this->get_s3_client();
 		try {
-			$s3_client->uploadDirectory( $dir_path, $this->bucket, 'uploads' );
+			error_log('putting object');
+			// $s3_client->uploadDirectory( $dir_path, $this->bucket, 'uploads' );
 		}
 		catch( S3Exception $e ) {
-			$this->log_results( $e->getMessage() . "\n" );
+			$this->logger->add_log_event( $e->getMessage(), 'uploads backup error' );
 		}
 	}
 
 	public function upload_file( $file_path, $file_name ) {
 		$s3_client = $this->get_s3_client();
 		try {
-			$result = $s3_client->putObject([
-			    'Bucket'     => $this->bucket,
-			    'Key'        => $file_name,
-			    'SourceFile' => $file_path . $file_name,
-			]);
+			error_log('putting object');
+			// $result = $s3_client->putObject([
+			//     'Bucket'     => $this->bucket,
+			//     'Key'        => $file_name,
+			//     'SourceFile' => $file_path . $file_name,
+			// ]);
 		}
 		catch( S3Exception $e ) {
-			$this->log_results( $e->getMessage() . "\n" );
+			$this->logger->add_log_event( $e->getMessage(), 'database backup error' );
 		}
 	}
 
@@ -64,16 +66,5 @@ class Sole_AWS_Controller {
 			),
 		]);
 		return $s3_client;
-	}
-
-	private function log_results( $results ) {
-		try {
-			$handle = fopen( $results, 'a' );
-			fwrite( $handle, $results );
-			fclose( $handle );
-		}
-		catch( Exception $e ) {
-			error_log( $e->getMessage() );
-		}
 	}
 }

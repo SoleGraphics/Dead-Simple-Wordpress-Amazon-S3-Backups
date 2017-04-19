@@ -1,12 +1,12 @@
 <?php
 /*
-Plugin Name: Dead Simple Wordpress Amazon S3 Backups
-Plugin URI:
-Description: Simple site backup of your database and uploads directory to an AWS bucket.
-Author: Sole Graphics
-Author URI: http://www.solegraphics.com/
-Version: 0.1
-License:
+	Plugin Name: Dead Simple Wordpress Amazon S3 Backups
+	Plugin URI: https://github.com/SoleGraphics/Dead-Simple-Wordpress-Amazon-S3-Backups
+	Description: Simple site backup of your database and uploads directory to an AWS bucket.
+	Author: Sole Graphics
+	Author URI: http://www.solegraphics.com/
+	Version: 0.1
+	License:
 */
 
 // Amazons S3 SDK library

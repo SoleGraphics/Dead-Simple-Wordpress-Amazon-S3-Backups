@@ -23,7 +23,7 @@ class Sole_AWS_Backup {
 	const DB_BACKUP_EVENT       = 'sole_db_event_hook';
 	const UPLOADS_BACKUP_EVENT  = 'sole_uploads_event_hook';
 
-	// Plugin Options to register & display
+	// Plugin Options
 	private $plugin_settings = array(
 		'Access Key'    => array(
 			'slug' => 'sole_aws_access_key',
@@ -49,7 +49,7 @@ class Sole_AWS_Backup {
 			'instruction' => 'Enter time in a 24 hour "HH:MM" format',
 		),
 		'Uploads Backup Frequency' => array(
-			'slug'    => 'sole_aws_db_uploads_frequency',
+			'slug'    => 'sole_aws_uploads_backup_frequency',
 			'options' => array(
 				'daily', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
 			)
@@ -72,13 +72,25 @@ class Sole_AWS_Backup {
 		add_filter( 'pre_update_option_sole_aws_uploads_backup_timestamp', array( $this,'check_if_is_valid_timestamp' ), 10, 2 );
 
 		// Need to add a weekly CRON job option
-		add_filter( 'cron_schedules', array( $this, 'add_weekly_cron_job' ) );
+		add_filter( 'cron_schedules', array( $this, 'add_weekly_cron_job_option' ) );
+
+		// Add the scheduled events
+		add_action( self::DB_BACKUP_EVENT, array( $this, 'sole_db_backup' ) );
+		add_action( self::UPLOADS_BACKUP_EVENT, array( $this, 'sole_uploads_backup' ) );
+
+		// Need to check if the scheduled events settings were set
+		add_action( 'update_option', array( $this, 'clear_outdated_schedules' ), 10, 3 );
+
+		// Need to check on updating schedules/CRON jobs AFTER checking if there is updated plugin options.
+		add_action( 'shutdown', array( $this, 'verify_schedules_updated' ) );
 
 		// Check if user wants to manually backup the DB & uploads
 		if( isset( $_POST['manual-sole-backup-trigger'] ) ) {
-			//$this->backup_controller->sole_db_backup();
-			//$this->backup_controller->backup_uploads_dir();
+			$this->backup_controller->sole_db_backup();
+			$this->backup_controller->backup_uploads_dir();
 		}
+
+		register_deactivation_hook( __FILE__, array( $this, 'clear_plugin_info' ) );
 	}
 
 	// Setup the menu in the admin panel
@@ -92,15 +104,21 @@ class Sole_AWS_Backup {
 		add_submenu_page( self::SETTINGS_PAGE_SLUG, 'Dead Simple Backup Logs', 'Logs', 'administrator', self::SETTINGS_PAGE_SLUG . '-logs', array( $this, 'display_logs' ) );
 	}
 
+	public function sole_db_backup() {
+		$this->backup_controller->backup_database();
+	}
+
+	public function sole_uploads_backup() {
+		$this->backup_controller->backup_uploads_dir();
+	}
+
 	// Need to register all the settings
 	public function register_plugin_settings() {
-		// Settings defined at top of class
 		foreach ( $this->plugin_settings as $setting ) {
 			register_setting( self::SETTINGS_GROUP, $setting['slug'] );
 		}
 	}
 
-	// Callback function added in `add_admin_menu()`
 	public function display_settings_page() {
 		include 'templates/settings-form.php';
 	}
@@ -108,6 +126,12 @@ class Sole_AWS_Backup {
 	public function display_logs() {
 		include 'templates/log-file.php';
 	}
+
+	/**
+	 * ----------------------------------------------------------
+	 *      CRON Job Related Functionality
+	 * ----------------------------------------------------------
+	 */
 
 	// Check if a given value is a timestamp or not.
 	// If not, return the old value.
@@ -118,8 +142,8 @@ class Sole_AWS_Backup {
 		return $old;
 	}
 
-	// Need to add a weekly CRON job (if it doesn't already exist)
-	public function add_weekly_cron_job( $schedules ) {
+	// Need to add a weekly CRON job option (if it doesn't already exist)
+	public function add_weekly_cron_job_option( $schedules ) {
 		if( ! isset( $schedules['weekly'] ) ) {
 			$schedules['weekly'] = array(
 				'interval' => 604800,
@@ -129,25 +153,64 @@ class Sole_AWS_Backup {
 		return $schedules;
 	}
 
-	// Set the scheduled events for backing up the DB and uploads dir
-	public function add_scheduled_events() {
-		if( ! wp_next_schedule( self::DB_BACKUP_EVENT ) ) {
-			// schedule the event
+	// For both uploads and DB, checks if there is POST data
+	// If so, need to clear the old scheduled event
+	public function clear_outdated_schedules( $option, $old, $new ) {
+		if( false !== strpos( $option, 'sole_aws_db_backup_' ) ) {
+			wp_clear_scheduled_hook( self::DB_BACKUP_EVENT );
 		}
-		if( ! wp_next_schedule( self::UPLOADS_BACKUP_EVENT ) ) {
-			// schedule the event
+		else if ( false !== strpos( $option, 'sole_aws_uploads_backup_' ) ) {
+			wp_clear_scheduled_hook( self::UPLOADS_BACKUP_EVENT );
 		}
-
-		add_action( self::DB_BACKUP_EVENT, array( $this, 'sole_db_backup' ) );
-		add_action( self::UPLOADS_BACKUP_EVENT, array( $this, 'sole_uploads_backup' ) );
 	}
 
-	public function sole_db_backup() {
-		$this->backup_controller->backup_database();
+	// Checks if an event is scheduled. If not, attempt to create it.
+	public function verify_schedules_updated() {
+		if( ! wp_next_scheduled( self::DB_BACKUP_EVENT ) ) {
+			$this->create_new_schedule(
+				self::DB_BACKUP_EVENT,
+				'sole_aws_db_backup_frequency',
+				'sole_aws_db_backup_timestamp'
+			);
+		}
+		if( ! wp_next_scheduled( self::UPLOADS_BACKUP_EVENT ) ) {
+			$this->create_new_schedule(
+				self::UPLOADS_BACKUP_EVENT,
+				'sole_aws_uploads_backup_frequency',
+				'sole_aws_uploads_backup_timestamp'
+			);
+		}
 	}
 
-	public function sole_uploads_backup() {
-		$this->backup_controller->backup_uploads_dir();
+	// Set a schedule for a given event IF all info is present for that event
+	public function create_new_schedule( $event, $frequency, $time ) {
+		// Make sure that the settings for event frequency && time of day
+		$backup_frequency = get_option( $frequency );
+		$backup_time = get_option( $time );
+		// Only want to set if both are set
+		if( $backup_frequency && $backup_time ) {
+			// Get the UNIX timestamp
+			$start_time = $this->get_start_time( $backup_frequency, $backup_time );
+			$cron_frequency = ( 'daily' == $backup_frequency ) ? 'daily' : 'weekly';
+			wp_schedule_event( $start_time, $cron_frequency, $event );
+		}
+	}
+
+	// Helper function to take a day of the week & a time and create a UNIX timestamp equivalent
+	public function get_start_time( $frequency, $time ) {
+		$start_time = 0;
+		if( 'daily' != $frequency ) {
+			$start_time = strtotime( $frequency . ' ' . $time );
+		} else {
+			$start_time = strtotime( $time );
+		}
+		return $start_time;
+	}
+
+	// Plugin is being deactivated, need to remove CRON jobs
+	public function clear_plugin_info() {
+		wp_clear_scheduled_hook( self::DB_BACKUP_EVENT );
+		wp_clear_scheduled_hook( self::UPLOADS_BACKUP_EVENT );
 	}
 }
 

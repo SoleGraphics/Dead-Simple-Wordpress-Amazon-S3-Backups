@@ -62,7 +62,9 @@ class Sole_AWS_Backup {
 
 	function __construct() {
 		$this->backup_controller = new Sole_AWS_Backup_Controller();
+	}
 
+	public function init() {
 		// Need to add the admin views
 		add_action( 'admin_menu', array( $this, 'add_admin_menu') );
 		add_action( 'admin_init', array( $this, 'register_plugin_settings') );
@@ -81,7 +83,7 @@ class Sole_AWS_Backup {
 		// Need to check if the scheduled events settings were set
 		add_action( 'update_option', array( $this, 'clear_outdated_schedules' ), 10, 3 );
 
-		// Need to check on updating schedules/CRON jobs AFTER checking if there is updated plugin options.
+		// Need to check on updating schedules/CRON jobs AFTER checking if there is updated option.
 		add_action( 'shutdown', array( $this, 'verify_schedules_updated' ) );
 
 		// Check if user wants to manually backup the DB & uploads
@@ -214,4 +216,5 @@ class Sole_AWS_Backup {
 	}
 }
 
-new Sole_AWS_Backup();
+$sole_aws_backup = new Sole_AWS_Backup();
+$sole_aws_backup->init();

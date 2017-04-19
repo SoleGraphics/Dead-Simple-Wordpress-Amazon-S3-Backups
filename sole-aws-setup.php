@@ -18,8 +18,11 @@ require_once( 'core/backup-controller.php' );
 
 class Sole_AWS_Backup {
 
-	const SETTINGS_PAGE_SLUG = 'sole-settings-page';
-	const SETTINGS_GROUP     = 'sole-settings-group';
+	const SETTINGS_PAGE_SLUG    = 'sole-settings-page';
+	const SETTINGS_GROUP        = 'sole-settings-group';
+	const DB_BACKUP_EVENT       = 'sole_db_event_hook';
+	const UPLOADS_BACKUP_EVENT  = 'sole_uploads_event_hook';
+
 	// Plugin Options to register & display
 	private $plugin_settings = array(
 		'Access Key'    => array(
@@ -58,6 +61,8 @@ class Sole_AWS_Backup {
 	);
 
 	function __construct() {
+		$this->backup_controller = new Sole_AWS_Backup_Controller();
+
 		// Need to add the admin views
 		add_action( 'admin_menu', array( $this, 'add_admin_menu') );
 		add_action( 'admin_init', array( $this, 'register_plugin_settings') );
@@ -66,13 +71,13 @@ class Sole_AWS_Backup {
 		add_filter( 'pre_update_option_sole_aws_db_backup_timestamp', array( $this,'check_if_is_valid_timestamp' ), 10, 2 );
 		add_filter( 'pre_update_option_sole_aws_uploads_backup_timestamp', array( $this,'check_if_is_valid_timestamp' ), 10, 2 );
 
-		// TODO: add the cron jobs
+		// Need to add a weekly CRON job option
+		add_filter( 'cron_schedules', array( $this, 'add_weekly_cron_job' ) );
 
 		// Check if user wants to manually backup the DB & uploads
 		if( isset( $_POST['manual-sole-backup-trigger'] ) ) {
-			$backup_controller = new Sole_AWS_Backup_Controller();
-			$backup_controller->backup_database();
-			$backup_controller->backup_uploads_dir();
+			//$this->backup_controller->sole_db_backup();
+			//$this->backup_controller->backup_uploads_dir();
 		}
 	}
 
@@ -111,6 +116,38 @@ class Sole_AWS_Backup {
 			return $new;
 		}
 		return $old;
+	}
+
+	// Need to add a weekly CRON job (if it doesn't already exist)
+	public function add_weekly_cron_job( $schedules ) {
+		if( ! isset( $schedules['weekly'] ) ) {
+			$schedules['weekly'] = array(
+				'interval' => 604800,
+				'display'  => __('Once Weekly'),
+			);
+		}
+		return $schedules;
+	}
+
+	// Set the scheduled events for backing up the DB and uploads dir
+	public function add_scheduled_events() {
+		if( ! wp_next_schedule( self::DB_BACKUP_EVENT ) ) {
+			// schedule the event
+		}
+		if( ! wp_next_schedule( self::UPLOADS_BACKUP_EVENT ) ) {
+			// schedule the event
+		}
+
+		add_action( self::DB_BACKUP_EVENT, array( $this, 'sole_db_backup' ) );
+		add_action( self::UPLOADS_BACKUP_EVENT, array( $this, 'sole_uploads_backup' ) );
+	}
+
+	public function sole_db_backup() {
+		$this->backup_controller->backup_database();
+	}
+
+	public function sole_uploads_backup() {
+		$this->backup_controller->backup_uploads_dir();
 	}
 }
 

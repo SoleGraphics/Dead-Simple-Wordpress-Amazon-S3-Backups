@@ -13,6 +13,7 @@
 require_once( 'vendor/autoload.php' );
 
 // Custom controllers for the backup process
+require_once( 'core/sole-logger.php' );
 require_once( 'core/aws-controller.php' );
 require_once( 'core/backup-controller.php' );
 
@@ -62,9 +63,13 @@ class Sole_AWS_Backup {
 
 	function __construct() {
 		$this->backup_controller = new Sole_AWS_Backup_Controller();
+		$this->logger = Sole_AWS_Logger::get_instance();
 	}
 
 	public function init() {
+		// Setup the tables
+		register_activation_hook( __FILE__, array( $this->logger, 'build_database' ) );
+
 		// Need to add the admin views
 		add_action( 'admin_menu', array( $this, 'add_admin_menu') );
 		add_action( 'admin_init', array( $this, 'register_plugin_settings') );
@@ -93,6 +98,8 @@ class Sole_AWS_Backup {
 		}
 
 		register_deactivation_hook( __FILE__, array( $this, 'clear_plugin_info' ) );
+
+		// TODO: add uninstall hook
 	}
 
 	// Setup the menu in the admin panel

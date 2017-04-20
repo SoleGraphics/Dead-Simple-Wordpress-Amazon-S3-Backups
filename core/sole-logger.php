@@ -6,6 +6,7 @@
 
 class Sole_AWS_Logger {
 
+	const NUM_ROW_DISPLAY    = 3;
 	const DB_TABLE_EXTENSION = 'sole_aws_log';
 	protected static $instance;
 
@@ -17,9 +18,15 @@ class Sole_AWS_Logger {
 	}
 
 	private function __construct() {
+		global $wpdb;
 		// Page offset for displaying logs to the admins
 		$page_on = isset( $_GET['sole_log_page'] ) ? $_GET['sole_log_page'] : 1;
 		$this->page_on = max( 1, $page_on ) - 1;
+
+		// Need to get the maximum number of pages allowed
+		$max_num_sql = 'SELECT COUNT(*) FROM ' . $wpdb->prefix . self::DB_TABLE_EXTENSION;
+		$num_rows = $wpdb->get_var( $max_num_sql );
+		$this->max_page = ceil( $num_rows / self::NUM_ROW_DISPLAY ) - 1;
 	}
 
 	// Add table to the database, should only be called on plugin activation
@@ -61,10 +68,24 @@ class Sole_AWS_Logger {
 	}
 
 	public function get_log_events() {
-		// TODO: get events based on offset
+		global $wpdb;
+		$command = 'SELECT * FROM ' . $wpdb->prefix . self::DB_TABLE_EXTENSION . ' ORDER BY ID ASC LIMIT ' . ( $this->page_on * self::NUM_ROW_DISPLAY ) . ',' . self::NUM_ROW_DISPLAY . ';';
+		$results = $wpdb->get_results( $command );
+		return $results;
 	}
 
-	public function get_table_pagination() {
-		// display pagination for table
-	}
+	public function the_table_pagination() {
+		$base_url = admin_url( 'admin.php?page=sole-settings-page-logs' );
+		$previous =  ( 1 <= $this->page_on ) ? $base_url . '&sole_log_page=' . $this->page_on : false;
+		// +2 is for the pretty URLs being ahead of the actual offset value by 1
+		$next = ( $this->max_page > $this->page_on ) ? $base_url . '&sole_log_page=' . ( $this->page_on + 2 ) : false; ?>
+		<div class="sole-log-pagination">
+			<?php if( $previous ): ?>
+				<a href="<?php echo $previous; ?>">Previous Page</a>
+			<?php endif; ?>
+			<?php if( $next ): ?>
+				<a href="<?php echo $next; ?>">Next Page</a>
+			<?php endif; ?>
+		</div>
+	<?php }
 }

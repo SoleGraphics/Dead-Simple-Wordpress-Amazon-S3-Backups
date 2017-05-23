@@ -3,7 +3,7 @@
 /**
  * This class is the gateway to AWS
  *
- * Assumes that AWS S3 has been loaded
+ * Loads AWS S3.
  */
 
 use Aws\S3\S3Client;
@@ -33,10 +33,12 @@ class Sole_AWS_Controller {
 		$s3_client = $this->get_s3_client();
 		try {
 			$s3_client->uploadDirectory( $dir_path, $this->bucket, 'uploads' );
+			return true;
 		}
 		catch( S3Exception $e ) {
 			$this->logger->add_log_event( $e->getMessage(), 'uploads backup error' );
 		}
+		return false;
 	}
 
 	public function upload_file( $file_path, $file_name ) {
@@ -47,10 +49,12 @@ class Sole_AWS_Controller {
 			    'Key'        => $file_name,
 			    'SourceFile' => $file_path . $file_name,
 			]);
+			return true;
 		}
 		catch( S3Exception $e ) {
 			$this->logger->add_log_event( $e->getMessage(), 'database backup error' );
 		}
+		return false;
 	}
 
 	// Common setup for both upload procedures

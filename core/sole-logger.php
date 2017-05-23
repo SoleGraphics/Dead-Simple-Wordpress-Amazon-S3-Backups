@@ -2,11 +2,13 @@
 
 /**
  * This class is meant for setting and retriving history logs
+ *
+ * Also controls user notifications.
  */
 
 class Sole_AWS_Logger {
 
-	const NUM_ROW_DISPLAY    = 3;
+	const NUM_ROW_DISPLAY    = 15;
 	const DB_TABLE_EXTENSION = 'sole_aws_log';
 	protected static $instance;
 
@@ -67,6 +69,7 @@ class Sole_AWS_Logger {
 		) );
 	}
 
+	// Load the log messages for the current page.
 	public function get_log_events() {
 		global $wpdb;
 		$command = 'SELECT * FROM ' . $wpdb->prefix . self::DB_TABLE_EXTENSION . ' ORDER BY ID ASC LIMIT ' . ( $this->page_on * self::NUM_ROW_DISPLAY ) . ',' . self::NUM_ROW_DISPLAY . ';';
@@ -74,8 +77,10 @@ class Sole_AWS_Logger {
 		return $results;
 	}
 
+	// Need to add pagination to the table.
 	public function the_table_pagination() {
 		$base_url = admin_url( 'admin.php?page=sole-settings-page-logs' );
+		// Get the previous page URL
 		$previous =  ( 1 <= $this->page_on ) ? $base_url . '&sole_log_page=' . $this->page_on : false;
 		// +2 is for the pretty URLs being ahead of the actual offset value by 1
 		$next = ( $this->max_page > $this->page_on ) ? $base_url . '&sole_log_page=' . ( $this->page_on + 2 ) : false; ?>
@@ -88,4 +93,33 @@ class Sole_AWS_Logger {
 			<?php endif; ?>
 		</div>
 	<?php }
+
+	/**
+	 * Safely setup mailing admin(s) of successful backups
+	 */
+	public function register_user_email( $msg='' ) {
+		if( function_exists( 'wp_mail' ) ) {
+			$this->send_user_email( $msg );
+		} else {
+			// Wait till the function exists and then send the email.
+			add_action( 'plugins_loaded', function() use( $msg ) {
+				$this->send_user_email( $msg );
+			} );
+		}
+	}
+
+	/**
+	 * Actually send the backup upload notification email.
+	 */
+	public function send_user_email( $msg ) {
+		$email_addr = get_option( 'notification_address' );
+		$email_subject = get_bloginfo( 'name' ) . ' Backup';
+
+		// If there isn't an address / recipient to send to, return.
+		if( empty( $email_addr ) || empty( $msg ) ) {
+			return;
+		}
+
+		wp_mail( $email_addr, $email_subject, $msg );
+	}
 }

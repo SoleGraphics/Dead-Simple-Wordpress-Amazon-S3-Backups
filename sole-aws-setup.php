@@ -26,6 +26,10 @@ class Sole_AWS_Backup {
 
 	// Plugin Options
 	private $plugin_settings = array(
+		'Notification Address'  => array(
+			'slug'        => 'notification_address',
+			'instruction' => 'For multiple recipients, seperate addresses with a comma (\',\'). Leave blank for no email notifications.',
+		),
 		'Access Key'    => array(
 			'slug' => 'sole_aws_access_key',
 		),

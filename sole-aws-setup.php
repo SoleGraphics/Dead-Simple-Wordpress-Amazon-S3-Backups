@@ -5,7 +5,7 @@
 	Description: Simple site backup of your database and uploads directory to an AWS bucket.
 	Author: Sole Graphics
 	Author URI: http://www.solegraphics.com/
-	Version: 0.1
+	Version: 0.2
 	License:
 */
 
@@ -93,7 +93,7 @@ class Sole_AWS_Backup {
 
 		// Check if user wants to manually backup the DB & uploads
 		if( isset( $_POST['manual-sole-backup-trigger'] ) ) {
-			$this->backup_controller->sole_db_backup();
+			$this->backup_controller->backup_database();
 			$this->backup_controller->backup_uploads_dir();
 		}
 

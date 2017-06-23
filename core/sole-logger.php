@@ -72,7 +72,7 @@ class Sole_AWS_Logger {
 	// Load the log messages for the current page.
 	public function get_log_events() {
 		global $wpdb;
-		$command = 'SELECT * FROM ' . $wpdb->prefix . self::DB_TABLE_EXTENSION . ' ORDER BY ID ASC LIMIT ' . ( $this->page_on * self::NUM_ROW_DISPLAY ) . ',' . self::NUM_ROW_DISPLAY . ';';
+		$command = 'SELECT * FROM ' . $wpdb->prefix . self::DB_TABLE_EXTENSION . ' ORDER BY ID DESC LIMIT ' . ( $this->page_on * self::NUM_ROW_DISPLAY ) . ',' . self::NUM_ROW_DISPLAY . ';';
 		$results = $wpdb->get_results( $command );
 		return $results;
 	}
@@ -86,10 +86,10 @@ class Sole_AWS_Logger {
 		$next = ( $this->max_page > $this->page_on ) ? $base_url . '&sole_log_page=' . ( $this->page_on + 2 ) : false; ?>
 		<div class="sole-log-pagination">
 			<?php if( $previous ): ?>
-				<a href="<?php echo $previous; ?>">Previous Page</a>
+				<a href="<?php echo $previous; ?>">Newer Entries</a>
 			<?php endif; ?>
 			<?php if( $next ): ?>
-				<a href="<?php echo $next; ?>">Next Page</a>
+				<a href="<?php echo $next; ?>">Older Entries</a>
 			<?php endif; ?>
 		</div>
 	<?php }

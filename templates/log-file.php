@@ -16,3 +16,17 @@
 		<?php $logger->the_table_pagination(); ?>
 	</div>
 </div>
+<style>
+	.log-wrapper table {
+		border-spacing: 0;
+	}
+	.log-wrapper tr:nth-child(2n) {
+		background-color: #ccc;
+	}
+	.log-wrapper tr td {
+		padding: 10px 20px;
+	}
+	.log-wrapper tr td:nth-child(2) {
+		padding: 10px 30px;
+	}
+</style>

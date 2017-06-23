@@ -10,7 +10,6 @@
 */
 
 /*
-	TODO: Settings should be in a config file.
 	TODO: Use a CRON controller for scheduling related tasks
 */
 
@@ -29,48 +28,16 @@ class Sole_AWS_Backup {
 	const DB_BACKUP_EVENT       = 'sole_db_event_hook';
 	const UPLOADS_BACKUP_EVENT  = 'sole_uploads_event_hook';
 
-	// Plugin Options
-	private $plugin_settings = array(
-		'Notification Address'  => array(
-			'slug'        => 'notification_address',
-			'instruction' => 'For multiple recipients, seperate addresses with a comma (\',\'). Leave blank for no email notifications.',
-		),
-		'Access Key'    => array(
-			'slug' => 'sole_aws_access_key',
-		),
-		'Access Secret' => array(
-			'slug' =>'sole_aws_access_secret',
-		),
-		'Bucket'        => array(
-			'slug' => 'sole_aws_bucket',
-		),
-		'Region'        => array(
-			'slug'        => 'sole_aws_region',
-			'instruction' => 'To find your region check <a href="http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region" target="__blank">Amazon\'s documentation',
-		),
-		'Database Backup Frequency' => array(
-			'slug'    => 'sole_aws_db_backup_frequency',
-			'options' => array(
-				'daily', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
-			)
-		),
-		'Database Backup Time' => array(
-			'slug' => 'sole_aws_db_backup_timestamp',
-			'instruction' => 'Enter time in a 24 hour "HH:MM" format',
-		),
-		'Uploads Backup Frequency' => array(
-			'slug'    => 'sole_aws_uploads_backup_frequency',
-			'options' => array(
-				'daily', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
-			)
-		),
-		'Uploads Backup Time' => array(
-			'slug' => 'sole_aws_uploads_backup_timestamp',
-			'instruction' => 'Enter time in a 24 hour "HH:MM" format',
-		)
-	);
+	private $plugin_settings;
 
 	function __construct() {
+		// Load the settings
+		if( ! file_exists( __DIR__ . '/plugin-settings.ini' ) ) {
+			throw new Exception( 'No plugin settings file found!', 1 );
+		}
+		$this->plugin_settings = parse_ini_file( 'plugin-settings.ini', true );
+
+		// Create controllers
 		$this->backup_controller = new Sole_AWS_Backup_Controller();
 		$this->admin_controller  = new Sole_Admin_Controller(
 			$this->plugin_settings,

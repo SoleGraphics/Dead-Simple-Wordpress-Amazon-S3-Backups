@@ -6,7 +6,7 @@
 	Author: Sole Graphics
 	Author URI: http://www.solegraphics.com/
 	Version: 0.2.1
-	License:
+	License: MIT
 */
 
 // Amazons S3 SDK library

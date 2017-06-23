@@ -9,6 +9,12 @@
 	License:
 */
 
+/*
+	TODO: Settings should be in a config file.
+	TODO: Use an admin controller for displaying all admin templates
+	TODO: Use a CRON controller for scheduling related tasks
+*/
+
 // Amazons S3 SDK library
 require_once( 'vendor/autoload.php' );
 

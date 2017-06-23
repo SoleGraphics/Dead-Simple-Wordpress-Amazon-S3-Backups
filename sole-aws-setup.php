@@ -11,7 +11,6 @@
 
 /*
 	TODO: Settings should be in a config file.
-	TODO: Use an admin controller for displaying all admin templates
 	TODO: Use a CRON controller for scheduling related tasks
 */
 
@@ -20,12 +19,12 @@ require_once( 'vendor/autoload.php' );
 
 // Custom controllers for the backup process
 require_once( 'core/sole-logger.php' );
+require_once( 'core/admin-controller.php' );
 require_once( 'core/aws-controller.php' );
 require_once( 'core/backup-controller.php' );
 
 class Sole_AWS_Backup {
 
-	const SETTINGS_PAGE_SLUG    = 'sole-settings-page';
 	const SETTINGS_GROUP        = 'sole-settings-group';
 	const DB_BACKUP_EVENT       = 'sole_db_event_hook';
 	const UPLOADS_BACKUP_EVENT  = 'sole_uploads_event_hook';
@@ -73,15 +72,19 @@ class Sole_AWS_Backup {
 
 	function __construct() {
 		$this->backup_controller = new Sole_AWS_Backup_Controller();
-		$this->logger = Sole_AWS_Logger::get_instance();
+		$this->admin_controller  = new Sole_Admin_Controller(
+			$this->plugin_settings,
+			self::SETTINGS_GROUP );
+		$this->logger            = Sole_AWS_Logger::get_instance();
 	}
 
 	public function init() {
+		$this->admin_controller->init();
+
 		// Setup the tables
 		register_activation_hook( __FILE__, array( $this->logger, 'build_database' ) );
 
-		// Need to add the admin views
-		add_action( 'admin_menu', array( $this, 'add_admin_menu') );
+		// Setup the plugin options
 		add_action( 'admin_init', array( $this, 'register_plugin_settings') );
 
 		// Need to check that the timestamps are valid times
@@ -113,16 +116,7 @@ class Sole_AWS_Backup {
 		register_uninstall_hook( __FILE__, array( 'Sole_AWS_Logger', 'destroy_table' ) );
 	}
 
-	// Setup the menu in the admin panel
-	public function add_admin_menu() {
-		add_menu_page( 'Dead Simple Backup', 'Dead Simple Backup', 'administrator', self::SETTINGS_PAGE_SLUG, '', 'dashicons-analytics' );
 
-		// Register submenu for plugin settings - default page for the plugin
-		add_submenu_page( self::SETTINGS_PAGE_SLUG, 'Dead Simple Backup Settings', 'Settings', 'administrator', self::SETTINGS_PAGE_SLUG, array( $this, 'display_settings_page' ) );
-
-		// Register submenu for log page
-		add_submenu_page( self::SETTINGS_PAGE_SLUG, 'Dead Simple Backup Logs', 'Logs', 'administrator', self::SETTINGS_PAGE_SLUG . '-logs', array( $this, 'display_logs' ) );
-	}
 
 	public function sole_db_backup() {
 		$this->backup_controller->backup_database();
@@ -137,14 +131,6 @@ class Sole_AWS_Backup {
 		foreach ( $this->plugin_settings as $setting ) {
 			register_setting( self::SETTINGS_GROUP, $setting['slug'] );
 		}
-	}
-
-	public function display_settings_page() {
-		include 'templates/settings-form.php';
-	}
-
-	public function display_logs() {
-		include 'templates/log-file.php';
 	}
 
 	/**

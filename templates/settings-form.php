@@ -1,7 +1,7 @@
 <div class="wrap">
 	<h1>Dead Simple Wordpress Amazon S3 Backups</h1>
 	<form method="POST" action="options.php">
-		<?php settings_fields( self::SETTINGS_GROUP ); ?>
+		<?php settings_fields( $this->settings_group ); ?>
 		<?php do_settings_sections( 'sole-settings-page' ); ?>
 		<h2>Settings</h2>
 		<table>

@@ -14,9 +14,11 @@
 */
 
 // Amazons S3 SDK library
+// TODO: decide if should use composer for this.
 require_once( 'vendor/autoload.php' );
 
 // Custom controllers for the backup process
+// TODO: use an autoloader for this
 require_once( 'core/sole-logger.php' );
 require_once( 'core/admin-controller.php' );
 require_once( 'core/aws-controller.php' );
@@ -82,8 +84,6 @@ class Sole_AWS_Backup {
 		// Need to remove our custom table from the DB
 		register_uninstall_hook( __FILE__, array( 'Sole_AWS_Logger', 'destroy_table' ) );
 	}
-
-
 
 	public function sole_db_backup() {
 		$this->backup_controller->backup_database();

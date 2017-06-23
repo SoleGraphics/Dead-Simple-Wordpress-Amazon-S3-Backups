@@ -5,20 +5,14 @@
 	Description: Simple site backup of your database and uploads directory to an AWS bucket.
 	Author: Sole Graphics
 	Author URI: http://www.solegraphics.com/
-	Version: 0.2
+	Version: 0.2.1
 	License:
 */
 
-/*
-	TODO: Use a CRON controller for scheduling related tasks
-*/
-
 // Amazons S3 SDK library
-// TODO: decide if should use composer for this.
 require_once( 'vendor/autoload.php' );
 
 // Custom controllers for the backup process
-// TODO: use an autoloader for this
 require_once( 'core/sole-logger.php' );
 require_once( 'core/admin-controller.php' );
 require_once( 'core/aws-controller.php' );
@@ -68,14 +62,6 @@ class Sole_AWS_Backup {
 		register_deactivation_hook( __FILE__, array( $this->schedule_controller, 'clear_plugin_info' ) );
 		// Need to remove our custom table from the DB
 		register_uninstall_hook( __FILE__, array( 'Sole_AWS_Logger', 'destroy_table' ) );
-	}
-
-	public function sole_db_backup() {
-		$this->backup_controller->backup_database();
-	}
-
-	public function sole_uploads_backup() {
-		$this->backup_controller->backup_uploads_dir();
 	}
 
 	// Need to register all the settings

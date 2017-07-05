@@ -19,8 +19,8 @@ class Sole_Schedule_Controller {
 		add_filter( 'cron_schedules', array( $this, 'add_weekly_cron_job_option' ) );
 
 		// Add the scheduled events
-		add_action( self::DB_BACKUP_EVENT, array( $this->sole_db_backup, 'backup_database' ) );
-		add_action( self::UPLOADS_BACKUP_EVENT, array( $this->sole_db_backup, 'backup_uploads_dir' ) );
+		add_action( self::DB_BACKUP_EVENT, array( $this->backup_controller, 'backup_database' ) );
+		add_action( self::UPLOADS_BACKUP_EVENT, array( $this->backup_controller, 'backup_uploads_dir' ) );
 
 		// Need to check if the scheduled events settings were set
 		add_action( 'update_option', array( $this, 'clear_outdated_schedules' ), 10, 3 );

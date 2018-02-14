@@ -4,8 +4,9 @@
 	Plugin URI: https://github.com/SoleGraphics/Dead-Simple-Wordpress-Amazon-S3-Backups
 	Description: Simple site backup of your database and uploads directory to an AWS bucket.
 	Author: Sole Graphics
+	Contributors: Ben Greene
 	Author URI: http://www.solegraphics.com/
-	Version: 0.2.1
+	Version: 0.3
 	License: MIT
 */
 

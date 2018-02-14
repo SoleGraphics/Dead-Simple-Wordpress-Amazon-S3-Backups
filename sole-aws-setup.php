@@ -60,6 +60,20 @@ class Sole_AWS_Backup {
 			$this->backup_controller->backup_uploads_dir();
 		}
 
+		// Check if user wants to download backup the DB & uploads
+		// Only allow this for admins
+		if( isset( $_POST['download-sole-db-backup-trigger'] ) &&
+			is_admin() ) {
+			$this->backup_controller->download_db();
+		}
+
+		// Check if user wants to download backup the DB & uploads
+		// Only allow this for admins
+		if( isset( $_POST['download-sole-uploads-backup-trigger'] ) &&
+			is_admin() ) {
+			$this->backup_controller->download_uploads();
+		}
+
 		// Need to remove CRON jobs on deactivation
 		register_deactivation_hook( __FILE__, array( $this->schedule_controller, 'clear_plugin_info' ) );
 		// Need to remove our custom table from the DB

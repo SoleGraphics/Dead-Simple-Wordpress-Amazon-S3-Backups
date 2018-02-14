@@ -53,7 +53,9 @@ class Sole_AWS_Backup {
 		add_action( 'admin_init', array( $this, 'register_plugin_settings') );
 
 		// Check if user wants to manually backup the DB & uploads
-		if( isset( $_POST['manual-sole-backup-trigger'] ) ) {
+		// Only allow this for admins
+		if( isset( $_POST['manual-sole-backup-trigger'] ) &&
+			is_admin() ) {
 			$this->backup_controller->backup_database();
 			$this->backup_controller->backup_uploads_dir();
 		}

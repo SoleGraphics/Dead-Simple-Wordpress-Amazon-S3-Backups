@@ -15,8 +15,12 @@ class Sole_Admin_Controller {
 
 	// setup all WP hooks/actions
 	public function init() {
-		// Need to add the admin views
-		add_action( 'admin_menu', array( $this, 'add_admin_menu') );
+		// Need to add the admin views. Should be network settings if we're in a multisite.
+		if( is_multisite() ) {
+			add_action( 'network_admin_menu', array( $this, 'add_admin_menu') );
+		} else {
+			add_action( 'admin_menu', array( $this, 'add_admin_menu') );
+		}
 	}
 
 	// Setup the menu in the admin panel

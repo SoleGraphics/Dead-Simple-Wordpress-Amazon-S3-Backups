@@ -4,8 +4,9 @@
 	Plugin URI: https://github.com/SoleGraphics/Dead-Simple-Wordpress-Amazon-S3-Backups
 	Description: Simple site backup of your database and uploads directory to an AWS bucket.
 	Author: Sole Graphics
+	Contributors: Ben Greene
 	Author URI: http://www.solegraphics.com/
-	Version: 0.2.1
+	Version: 0.3
 	License: MIT
 */
 
@@ -53,9 +54,25 @@ class Sole_AWS_Backup {
 		add_action( 'admin_init', array( $this, 'register_plugin_settings') );
 
 		// Check if user wants to manually backup the DB & uploads
-		if( isset( $_POST['manual-sole-backup-trigger'] ) ) {
+		// Only allow this for admins
+		if( isset( $_POST['manual-sole-backup-trigger'] ) &&
+			is_admin() ) {
 			$this->backup_controller->backup_database();
 			$this->backup_controller->backup_uploads_dir();
+		}
+
+		// Check if user wants to download backup the DB & uploads
+		// Only allow this for admins
+		if( isset( $_POST['download-sole-db-backup-trigger'] ) &&
+			is_admin() ) {
+			$this->backup_controller->download_db();
+		}
+
+		// Check if user wants to download backup the DB & uploads
+		// Only allow this for admins
+		if( isset( $_POST['download-sole-uploads-backup-trigger'] ) &&
+			is_admin() ) {
+			$this->backup_controller->download_uploads();
 		}
 
 		// Need to remove CRON jobs on deactivation

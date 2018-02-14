@@ -34,4 +34,12 @@
 		<input type="hidden" name="manual-sole-backup-trigger" value="true" />
 		<?php submit_button( 'Backup Files & Database' ); ?>
 	</form>
+	<form method="POST" action="">
+		<input type="hidden" name="download-sole-db-backup-trigger" value="true" />
+		<?php submit_button( 'Download Database Backup' ); ?>
+	</form>
+	<form method="POST" action="">
+		<input type="hidden" name="download-sole-uploads-backup-trigger" value="true" />
+		<?php submit_button( 'Download Uploads Backup' ); ?>
+	</form>
 </div>

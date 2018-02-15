@@ -40,7 +40,7 @@ class Sole_AWS_Controller {
 			return true;
 		}
 		catch( Exception $e ) {
-			$this->logger->add_log_event( $e->getMessage(), 'uploads backup error' );
+			$this->logger->add_log_event( $e->getMessage(), 'AWS Controller' );
 		}
 		return false;
 	}
@@ -60,7 +60,7 @@ class Sole_AWS_Controller {
 			return true;
 		}
 		catch( Exception $e ) {
-			$this->logger->add_log_event( $e->getMessage(), 'database backup error' );
+			$this->logger->add_log_event( $e->getMessage(), 'AWS Controller' );
 		}
 		return false;
 	}
@@ -80,7 +80,7 @@ class Sole_AWS_Controller {
 		}
 		// Could not connect to AWS
 		catch( Exception $e ) {
-			$this->logger->add_log_event( $e->getMessage(), 'AWS connection error' );
+			$this->logger->add_log_event( $e->getMessage(), 'AWS Controller' );
 			return false;
 		}
 	}

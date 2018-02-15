@@ -6,11 +6,13 @@ class Sole_Admin_Controller {
 
 	private $plugin_settings;
 	private $settings_group;
+	private $table_controller;
 
 	// setup the settings array
 	public function __construct( $plugin_settings, $settings_group ) {
 		$this->plugin_settings = $plugin_settings;
 		$this->settings_group = $settings_group;
+		$this->table_controller = Sole_AWS_Logger::get_instance();
 	}
 
 	// setup all WP hooks/actions
@@ -39,7 +41,22 @@ class Sole_Admin_Controller {
 	}
 
 	public function display_logs() {
-		include plugin_dir_path( __DIR__ ) . 'templates/log-file.php';
+		// Check if a page is set
+		$page           = isset( $_GET['page_to_display'] ) ? $_GET['page_to_display']: 1;
+		$page 			= max( $page, 1 );
+		$type			= isset( $_GET['msg_type'] ) ? $_GET['msg_type'] : 'error';
+
+		// Get sender information
+		$sender  = isset( $_GET['sender'] ) ? $_GET['sender'] : '';
+		$senders = $this->table_controller->get_log_senders();
+		$senders = $this->table_controller->simplify_array( $senders, 'log_sender' );
+
+		// Log results to display to the user
+		$logs = $this->table_controller->get_log_messages( $page, $type, $sender );
+
+		// Get the number of pages
+		$total_pages = ceil( $this->table_controller->get_max_number_results() / $this->table_controller->num_to_display );
+		include plugin_dir_path( __DIR__ ) . 'templates/error-logs.php';
 	}
 
 }

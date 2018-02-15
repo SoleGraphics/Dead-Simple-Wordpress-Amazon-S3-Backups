@@ -8,8 +8,10 @@
 
 class Sole_AWS_Logger {
 
-	const NUM_ROW_DISPLAY    = 15;
-	const DB_TABLE_EXTENSION = 'sole_aws_log';
+	const TABLE_NAME = 'sole_aws_log';
+
+	public $num_to_display = 10;
+
 	protected static $instance;
 
 	public static function get_instance() {
@@ -20,106 +22,131 @@ class Sole_AWS_Logger {
 	}
 
 	private function __construct() {
-		global $wpdb;
-		// Page offset for displaying logs to the admins
-		$page_on = isset( $_GET['sole_log_page'] ) ? $_GET['sole_log_page'] : 1;
-		$this->page_on = max( 1, $page_on ) - 1;
-
-		// Need to get the maximum number of pages allowed
-		$max_num_sql = 'SELECT COUNT(*) FROM ' . $wpdb->prefix . self::DB_TABLE_EXTENSION;
-		$num_rows = $wpdb->get_var( $max_num_sql );
-		$this->max_page = ceil( $num_rows / self::NUM_ROW_DISPLAY ) - 1;
-	}
-
-	// Add table to the database, should only be called on plugin activation
-	public function build_database() {
-		global $wpdb;
-		$full_table_name = $wpdb->prefix . self::DB_TABLE_EXTENSION;
-		// If the table is already there, we don't want to recreate it.
-		if( $full_table_name == $wpdb->get_var("SHOW TABLES LIKE '$full_table_name'") ) {
-			return;
+		if( ! $this->table_exists() ) {
+			$this->create_log_table();
 		}
-		// Create SQL to add table & execute
-		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-		$charset = $wpdb->get_charset_collate();
-		$sql = "CREATE TABLE $full_table_name (
-			ID mediumint NOT NULL AUTO_INCREMENT,
-			log_time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-			log_message text DEFAULT '' NOT NULL,
-			log_type text DEFAULT '' NOT NULL,
-			PRIMARY KEY (ID)
-		) $charset;";
-		dbDelta( $sql );
 	}
 
-	// Should only be run on plugin uninstall.
-	public static function destroy_table() {
-		global $wpdb;
-		$sql = "DROP TABLE IF EXISTS " . $wpdb->prefix . self::DB_TABLE_EXTENSION;
-		$wpdb->query( $sql );
-	}
-
-	public function add_log_event( $msg, $type='event' ) {
+	/**
+	 * Add event to the table
+	 *     $msg:    the message to enter into the logger
+	 *     $sender: the sending class/object loging the message
+	 *     $status: whether the message is an error or generic info logging
+	 */
+	public function add_log_event( $msg, $sender, $status='error' ) {
 		global $wpdb;
 		$time_added = date('Y-m-d H:i:s');
-		$wpdb->insert( $wpdb->prefix . self::DB_TABLE_EXTENSION, array(
+		$wpdb->insert( $wpdb->prefix . self::TABLE_NAME, array(
 			'log_time'    => $time_added,
 			'log_message' => $msg,
-			'log_type'    => $type,
+			'log_sender'  => $sender,
+			'log_status'  => $status,
 		) );
 	}
 
-	// Load the log messages for the current page.
-	public function get_log_events() {
+	/**
+	 * Returns a list of the different log senders in the table
+	 */
+	public function get_log_senders() {
 		global $wpdb;
-		$command = 'SELECT * FROM ' . $wpdb->prefix . self::DB_TABLE_EXTENSION . ' ORDER BY ID DESC LIMIT ' . ( $this->page_on * self::NUM_ROW_DISPLAY ) . ',' . self::NUM_ROW_DISPLAY . ';';
+		$command = 'SELECT DISTINCT log_sender FROM ' . $wpdb->prefix . self::TABLE_NAME . ';';
 		$results = $wpdb->get_results( $command );
 		return $results;
 	}
 
-	// Need to add pagination to the table.
-	public function the_table_pagination() {
-		$base_url = admin_url( 'admin.php?page=sole-settings-page-logs' );
-		// Get the previous page URL
-		$previous =  ( 1 <= $this->page_on ) ? $base_url . '&sole_log_page=' . $this->page_on : false;
-		// +2 is for the pretty URLs being ahead of the actual offset value by 1
-		$next = ( $this->max_page > $this->page_on ) ? $base_url . '&sole_log_page=' . ( $this->page_on + 2 ) : false; ?>
-		<div class="sole-log-pagination">
-			<?php if( $previous ): ?>
-				<a href="<?php echo $previous; ?>">Newer Entries</a>
-			<?php endif; ?>
-			<?php if( $next ): ?>
-				<a href="<?php echo $next; ?>">Older Entries</a>
-			<?php endif; ?>
-		</div>
-	<?php }
-
 	/**
-	 * Safely setup mailing admin(s) of successful backups
+	 * Prints out the pagination links for the error logs
 	 */
-	public function register_user_email( $msg='' ) {
-		if( function_exists( 'wp_mail' ) ) {
-			$this->send_user_email( $msg );
-		} else {
-			// Wait till the function exists and then send the email.
-			add_action( 'plugins_loaded', function() use( $msg ) {
-				$this->send_user_email( $msg );
-			} );
+	public function the_pagination_links( $page ) {
+		// Get the cuurent link's page
+		$protocol = isset($_SERVER["HTTPS"]) ? 'https://' : 'http://';
+		$base_link = $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+		$current_page_link = 'page_to_display=' . $page;
+		$max_pages = $this->get_max_number_results();
+
+		// Only display the previous page if not on the first page
+		if( 1 < $page ) {
+			$previous_link = str_replace( $current_page_link, 'page_to_display=' . ( $page - 1 ), $base_link );
+			echo "<a class=\"pagination_links--previous\" href=\"$previous_link\">Previous</a>";
+		}
+
+		// Display the next page link if not on the final pages
+		if( ( $page * $this->num_to_display ) < $max_pages ) {
+			$next_link = str_replace( $current_page_link, 'page_to_display=' . ( $page + 1 ), $base_link );
+			echo "<a href=\"$next_link\">Next</a>";
 		}
 	}
 
 	/**
-	 * Actually send the backup upload notification email.
+	 * Takes an sql results array, and returns a simple array of values from each row associated with a given key
 	 */
-	public function send_user_email( $msg ) {
-		$email_addr = get_option( 'notification_address' );
-		$email_subject = get_bloginfo( 'name' ) . ' Backup';
-
-		// If there isn't an address / recipient to send to, return.
-		if( empty( $email_addr ) || empty( $msg ) ) {
-			return;
+	public function simplify_array( $rows, $key ) {
+		$to_return = array();
+		foreach ( $rows as $row ) {
+			if( isset( $row->{$key} ) ) {
+				$to_return[] = $row->{$key};
+			}
 		}
+		return $to_return;
+	}
 
-		wp_mail( $email_addr, $email_subject, $msg );
+	/**
+	 * Get log messages
+	 *     $offset: the message to start at
+	 *     $num_to_retrieve: the number of messages to return
+	 */
+	public function get_log_messages( $offset, $msg_type='error', $sender="" ) {
+		global $wpdb;
+		// Account for display offset starting at 1, not 0
+		$offset--;
+		$command = 'SELECT * FROM ' . $wpdb->prefix . self::TABLE_NAME . ' WHERE log_status LIKE \'%' . $msg_type . '%\' AND log_sender LIKE \'%' . $sender . '%\'  ORDER BY log_time DESC LIMIT ' . ( $offset * $this->num_to_display ) . ',' . $this->num_to_display . ';';
+		$results = $wpdb->get_results( $command );
+		return $results;
+	}
+
+	/**
+	 * Get max number of pages/logs that can be displayed with current parameters
+	 */
+	public function get_max_number_results( $msg_type='error', $sender="" ) {
+		global $wpdb;
+		$command = 'SELECT * FROM ' . $wpdb->prefix . self::TABLE_NAME . ' WHERE log_status LIKE \'%' . $msg_type . '%\' AND log_sender LIKE \'%' . $sender . '%\';';
+		$results = $wpdb->get_results( $command );
+		return count( $results );
+	}
+
+	/**
+	 * Create the trove error logger table
+	 */
+	private function create_log_table() {
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		global $wpdb;
+
+		$full_table_name = $wpdb->prefix . self::TABLE_NAME;
+		$charset = $wpdb->get_charset_collate();
+
+		$sql = "CREATE TABLE $full_table_name (
+			ID mediumint NOT NULL AUTO_INCREMENT,
+			log_time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+			log_message text DEFAULT '' NOT NULL,
+			log_sender text DEFAULT '' NOT NULL,
+			log_status text DEFAULT '' NOT NULL,
+			PRIMARY KEY (ID)
+		) $charset;";
+
+		dbDelta( $sql );
+	}
+
+	/**
+	 * Checks the log table exists in the database
+	 */
+	private function table_exists() {
+		global $wpdb;
+		$full_table_name = $wpdb->prefix . self::TABLE_NAME;
+
+		if( $full_table_name == $wpdb->get_var("SHOW TABLES LIKE '$full_table_name'") ) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

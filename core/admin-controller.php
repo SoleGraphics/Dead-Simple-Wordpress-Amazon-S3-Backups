@@ -2,7 +2,8 @@
 
 class Sole_Admin_Controller {
 
-	const SETTINGS_PAGE_SLUG = 'sole-settings-page';
+	const SETTINGS_PAGE_SLUG  = 'sole-settings-page';
+	const SETTINGS_NONCE_NAME = 'wp_sole_aws_nonce';
 
 	private $plugin_settings;
 	private $settings_group;
@@ -20,6 +21,7 @@ class Sole_Admin_Controller {
 		// Need to add the admin views. Should be network settings if we're in a multisite.
 		if( is_multisite() ) {
 			add_action( 'network_admin_menu', array( $this, 'add_admin_menu') );
+			add_action( 'init', array( $this, 'check_options_updated' ) );
 		} else {
 			add_action( 'admin_menu', array( $this, 'add_admin_menu') );
 		}
@@ -37,7 +39,27 @@ class Sole_Admin_Controller {
 	}
 
 	public function display_settings_page() {
-		include plugin_dir_path( __DIR__ ) . 'templates/settings-form.php';
+		if( is_multisite() ) {
+			include plugin_dir_path( __DIR__ ) . 'templates/multisite-settings-form.php';
+		} else {
+			include plugin_dir_path( __DIR__ ) . 'templates/settings-form.php';
+		}
+	}
+
+	/**
+	 * Fallback for multisites to update the plugin options
+	 * (no options.php on multisite network).
+	 */
+	public function check_options_updated() {
+		if( isset( $_POST[self::SETTINGS_NONCE_NAME] ) &&
+			wp_verify_nonce( $_POST[self::SETTINGS_NONCE_NAME], 'aws_options' ) &&
+			is_admin() ) {
+			// Options are being updated, go through and save each.
+			foreach ( $this->plugin_settings as $setting ) {
+				$new_option_value = $_POST[$setting['slug']];
+				update_option( $setting['slug'], $new_option_value );
+			}
+		}
 	}
 
 	public function display_logs() {

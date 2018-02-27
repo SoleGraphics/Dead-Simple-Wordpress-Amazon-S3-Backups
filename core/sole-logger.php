@@ -6,9 +6,9 @@
  * Also controls user notifications.
  */
 
-class Sole_AWS_Logger {
+require_once( 'sole-database-manager.php' );
 
-	const TABLE_NAME = 'sole_aws_log';
+class Sole_AWS_Logger extends Database_Table_Manager {
 
 	public $num_to_display = 10;
 
@@ -21,10 +21,10 @@ class Sole_AWS_Logger {
 		return self::$instance;
 	}
 
-	private function __construct() {
-		if( ! $this->table_exists() ) {
-			$this->create_log_table();
-		}
+	// Use the DB manager to create/update the database
+	public function __construct() {
+		$db_path = plugin_dir_path( __DIR__ ) . 'database.ini';
+		$this->init_db( $db_path );
 	}
 
 	/**
@@ -36,7 +36,7 @@ class Sole_AWS_Logger {
 	public function add_log_event( $msg, $sender, $status='error' ) {
 		global $wpdb;
 		$time_added = date('Y-m-d H:i:s');
-		$wpdb->insert( $wpdb->prefix . self::TABLE_NAME, array(
+		$wpdb->insert( $wpdb->prefix . $this->table_name, array(
 			'log_time'    => $time_added,
 			'log_message' => $msg,
 			'log_sender'  => $sender,
@@ -49,7 +49,7 @@ class Sole_AWS_Logger {
 	 */
 	public function get_log_senders() {
 		global $wpdb;
-		$command = 'SELECT DISTINCT log_sender FROM ' . $wpdb->prefix . self::TABLE_NAME . ';';
+		$command = 'SELECT DISTINCT log_sender FROM ' . $wpdb->prefix . $this->table_name . ';';
 		$results = $wpdb->get_results( $command );
 		return $results;
 	}
@@ -99,7 +99,7 @@ class Sole_AWS_Logger {
 		global $wpdb;
 		// Account for display offset starting at 1, not 0
 		$offset--;
-		$command = 'SELECT * FROM ' . $wpdb->prefix . self::TABLE_NAME . ' WHERE log_status LIKE \'%' . $msg_type . '%\' AND log_sender LIKE \'%' . $sender . '%\'  ORDER BY log_time DESC LIMIT ' . ( $offset * $this->num_to_display ) . ',' . $this->num_to_display . ';';
+		$command = 'SELECT * FROM ' . $wpdb->prefix . $this->table_name . ' WHERE log_status LIKE \'%' . $msg_type . '%\' AND log_sender LIKE \'%' . $sender . '%\'  ORDER BY log_time DESC LIMIT ' . ( $offset * $this->num_to_display ) . ',' . $this->num_to_display . ';';
 		$results = $wpdb->get_results( $command );
 		return $results;
 	}
@@ -109,45 +109,9 @@ class Sole_AWS_Logger {
 	 */
 	public function get_max_number_results( $msg_type='error', $sender="" ) {
 		global $wpdb;
-		$command = 'SELECT * FROM ' . $wpdb->prefix . self::TABLE_NAME . ' WHERE log_status LIKE \'%' . $msg_type . '%\' AND log_sender LIKE \'%' . $sender . '%\';';
+		$command = 'SELECT * FROM ' . $wpdb->prefix . $this->table_name . ' WHERE log_status LIKE \'%' . $msg_type . '%\' AND log_sender LIKE \'%' . $sender . '%\';';
 		$results = $wpdb->get_results( $command );
 		return count( $results );
-	}
-
-	/**
-	 * Create the trove error logger table
-	 */
-	private function create_log_table() {
-		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-		global $wpdb;
-
-		$full_table_name = $wpdb->prefix . self::TABLE_NAME;
-		$charset = $wpdb->get_charset_collate();
-
-		$sql = "CREATE TABLE $full_table_name (
-			ID mediumint NOT NULL AUTO_INCREMENT,
-			log_time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-			log_message text DEFAULT '' NOT NULL,
-			log_sender text DEFAULT '' NOT NULL,
-			log_status text DEFAULT '' NOT NULL,
-			PRIMARY KEY (ID)
-		) $charset;";
-
-		dbDelta( $sql );
-	}
-
-	/**
-	 * Checks the log table exists in the database
-	 */
-	private function table_exists() {
-		global $wpdb;
-		$full_table_name = $wpdb->prefix . self::TABLE_NAME;
-
-		if( $full_table_name == $wpdb->get_var("SHOW TABLES LIKE '$full_table_name'") ) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 	// ---------------------------------------------------------------

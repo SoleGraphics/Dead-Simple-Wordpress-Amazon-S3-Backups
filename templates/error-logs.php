@@ -6,6 +6,7 @@
             <tr>
                 <td><label>Message Types</label></td>
                 <td><select name="msg_type">
+                    <option value="">All</option>
                     <option value="error" <?php if( 'error' == $type ): ?>selected="selected"<?php endif; ?>>Errors</option>
                     <option value="general" <?php if( 'general' == $type ): ?>selected="selected"<?php endif; ?>>General</option>
                 </select></td>

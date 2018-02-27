@@ -50,7 +50,7 @@ class Database_Table_Manager {
             return;
         } ?>
         <div class="notice notice-success">
-            <p>You need to update the database for <?php echo $this->table_name ?>. <form action="" method="POST"><input type="hidden" name="should_update_table_<?php echo $this->table_name; ?>" value="true"/><?php submit_button('Update Now'); ?></form></p>
+            <p>You need to update the database for <?php echo $this->table_name ?> (make sure you back it up first). <form action="" method="POST"><input type="hidden" name="should_update_table_<?php echo $this->table_name; ?>" value="true"/><?php submit_button('Update Now'); ?></form></p>
         </div>
     <?php }
 

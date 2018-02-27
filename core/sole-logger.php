@@ -149,4 +149,30 @@ class Sole_AWS_Logger {
 			return false;
 		}
 	}
+
+	// ---------------------------------------------------------------
+	// Resgister sending site admin an email that backups where made
+	// ---------------------------------------------------------------
+	public function register_user_email( $msg='' ) {
+		if( function_exists( 'wp_mail' ) ) {
+			$this->send_user_email( $msg );
+		} else {
+			// Wait till the function exists and then send the email.
+			add_action( 'plugins_loaded', function() use( $msg ) {
+				$this->send_user_email( $msg );
+			} );
+		}
+	}
+	/**
+	 * Actually send the backup upload notification email.
+	 */
+	public function send_user_email( $msg ) {
+		$email_addr = get_option( 'notification_address' );
+		$email_subject = get_bloginfo( 'name' ) . ' Backup';
+		// If there isn't an address / recipient to send to, return.
+		if( empty( $email_addr ) || empty( $msg ) ) {
+			return;
+		}
+		wp_mail( $email_addr, $email_subject, $msg );
+	}
 }

@@ -123,10 +123,17 @@ class Database_Table_Manager {
             }
             // Check if the column should allow NULL values
             $not_null = isset( $col_settings['allow_null'] ) ? '' : 'NOT NULL';
-
             // Put together the query string pieces
             $sql = sprintf( '%s %s %s %s %s %s;', $line_prefix, $cmd, $name, $col_settings['type'], $not_null, $default);
             $results = $wpdb->query( $sql );
+
+            // Check if there is a value to autopopulate the new columns with AND we're adding the column
+            if( isset( $col_settings['autopopulate'] ) &&
+                empty( $result ) ) {
+                $autopopulate = $col_settings['autopopulate'];
+                $update_sql   = "UPDATE $full_table_name SET $name = '$autopopulate';";
+                $wpdb->query( $update_sql );
+            }
         }
 
         update_option( $this->table_name . '_table_version', $this->version );

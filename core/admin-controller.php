@@ -66,7 +66,7 @@ class Sole_Admin_Controller {
 		// Check if a page is set
 		$page           = isset( $_GET['page_to_display'] ) ? $_GET['page_to_display']: 1;
 		$page 			= max( $page, 1 );
-		$type			= isset( $_GET['msg_type'] ) ? $_GET['msg_type'] : 'error';
+		$type			= isset( $_GET['msg_type'] ) ? $_GET['msg_type'] : '';
 
 		// Get sender information
 		$sender  = isset( $_GET['sender'] ) ? $_GET['sender'] : '';

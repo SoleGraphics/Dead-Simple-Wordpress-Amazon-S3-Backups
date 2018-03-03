@@ -17,10 +17,10 @@ class Sole_AWS_Backup_Controller {
 		$uploads_dir = wp_upload_dir();
 		$was_uploaded = $this->aws_controller->upload_dir( $uploads_dir['basedir'] );
 		if( $was_uploaded ) {
-			$this->logger->add_log_event( 'Site uploads successfully backed up - ' . date('Y-m-d H'), 'successful backup' );
+			$this->logger->add_log_event( 'Site uploads successfully backed up - ' . date('Y-m-d H'), 'Backup Controller', 'success' );
 			$this->logger->register_user_email( 'Your Wordpress site\'s uploads have been backup up to your Amazon Bucket! Thank you for choosing Dead Simple Backup.' );
 		} else {
-			$this->logger->add_log_event( 'Site uploads failed backed up - ' . date('Y-m-d H'), 'failed backup' );
+			$this->logger->add_log_event( 'Site uploads failed backed up - ' . date('Y-m-d H'), 'Backup Controller' );
 		}
 	}
 
@@ -41,10 +41,10 @@ class Sole_AWS_Backup_Controller {
 		$was_uploaded = $this->aws_controller->upload_file( $path, $file_name );
 		// If the database was uploaded, register an email event
 		if( $was_uploaded ) {
-			$this->logger->add_log_event( 'Site database successfully backed up - ' . date('Y-m-d H'), 'successful backup' );
+			$this->logger->add_log_event( 'Site database successfully backed up - ' . date('Y-m-d H'), 'Backup Controller', 'success' );
 			$this->logger->register_user_email( 'Your Wordpress site\'s database has been backup up to your Amazon Bucket! Thank you for choosing Dead Simple Backup.' );
 		} else {
-			$this->logger->add_log_event( 'Site database failed backed up - ' . date('Y-m-d H'), 'failed backup' );
+			$this->logger->add_log_event( 'Site database failed backed up - ' . date('Y-m-d H'), 'Backup Controller' );
 		}
 
 		// Delete file now that it's either on amazon OR things went VERY wrong.
